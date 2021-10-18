@@ -10,3 +10,4 @@ Product.create( [
   {"id"=>2, "name"=>"Silver Box", "price"=>49.0},
   {"id"=>3, "name"=>"Gold Box", "price"=>99.0}
   ])
+Customer.create([{"id"=>1, "name"=>"Customer 1", "address"=>"address 1, city 1", "zip_code"=>"99-999"}])
