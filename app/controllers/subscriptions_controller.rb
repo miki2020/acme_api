@@ -17,19 +17,11 @@ class SubscriptionsController < ApplicationController
   def create
     require "fakeapi"
     @amount = (Product.find(subscription_params[:product_id]).price * 100).to_i
-    if subscription_params[:payment_token]
-       @payment = Fakeapi.post_payment({"amount": "#{@amount}", "payment_token": "#{subscription_params[:payment_token]}"})
-       render json: @payment and return unless @payment['success']
+    @payment = Fakeapi.post_payment(payment_params)
+    render json: @payment, status: :unprocessable_entity and return unless @payment['success']
 
-       @subscription = Subscription.new(subscription_params)
-    else
-      @zip_code = Customer.find(subscription_params[:customer_id]).zip_code
-      @card_params = params.slice(:card_number, :cvv, :expiration_month, :expiration_year).to_enum.to_h.merge({"zip_code"=> @zip_code})
-      @payment = Fakeapi.post_payment({"amount"=>"#{@amount}"}.merge(@card_params))
-      render json: @payment and return unless @payment['success']
+    @subscription = Subscription.new(subscription_params.merge( "payment_token" => "#{@payment['token']}" ))
 
-      @subscription = Subscription.new(subscription_params.merge( "payment_token" => "#{@payment['token']}" ))
-    end
 
     if @subscription.save
       render json: @subscription, status: :created, location: @subscription
@@ -62,5 +54,23 @@ class SubscriptionsController < ApplicationController
     def subscription_params
       params.require(:subscription).permit(:payment_token, :customer_id, :product_id)
     end
+
+    def payment_by_token?
+      subscription_params[:payment_token]
+    end
+
+    def payment_params
+      @amount = (Product.find(subscription_params[:product_id]).price * 100).to_i
+
+      return {"amount": "#{@amount}", "payment_token": "#{subscription_params[:payment_token]}"} if payment_by_token?
+
+      zip_code = Customer.find(subscription_params[:customer_id]).zip_code
+      card_params = params.slice(:card_number, :cvv, :expiration_month, :expiration_year).to_enum.to_h.merge({"zip_code"=> zip_code})
+      {"amount"=>"#{@amount}"}.merge(card_params)
+    end
+
+
+
+
 
 end
