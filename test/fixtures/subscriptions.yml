@@ -1,7 +1,7 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  payment_token: MyString
+  payment_token: 201231f9599fa76442243466b87da7
   customer: one
   product: one
 
